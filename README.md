@@ -144,8 +144,8 @@ python multimodel_plot.py
 ```
 
 ### Генерація всіх цифр (від 0 до 9) на 25й епосі:
-![Генерація всіх цифр](\(https://github.com/BohdanDe/cGAN/blob/main/Figure_2.png))
+![Генерація всіх цифр](https://github.com/BohdanDe/cGAN/blob/main/Figure_2.png)
 
 ### Еволюція навчання моделі
 На графіку видно, як з кожною N-ною епохою генератор вчиться перетворювати шум на осмислені риси і краще відповідати на задану умову (цифру) в даному випадку трійку:
-![Еволюція моделей](\(https://github.com/BohdanDe/cGAN/blob/main/Figure_1.png))
+![Еволюція моделей](https://github.com/BohdanDe/cGAN/blob/main/Figure_1.png)
