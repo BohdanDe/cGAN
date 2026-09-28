@@ -1,69 +1,69 @@
 # conditional_gan_mnist
 
-Conditional GAN реалізує генерацію зображень рукописних цифр (від 0 до 9) на основі датасету MNIST за допомогою PyTorch. Проєкт є навчальним і демонструє роботу генеративно-змагальних мереж (GAN) з умовною генерацією (cGAN). 
+Conditional GAN implements the generation of handwritten digit images (from 0 to 9) based on the MNIST dataset using PyTorch. The project is educational and demonstrates the work of generative adversarial networks (GAN) with conditional generation (cGAN). 
 
-На відміну від класичного GAN, тут можна передати моделі мітку класу (наприклад, цифру "3"), і генератор створить зображення саме цієї цифри. Це реалізовано через конкатенацію просторових ознак та nn.Embedding шарів.
+Unlike a classic GAN, here you can pass a class label to the model (for example, the digit "3"), and the generator will create an image of exactly this digit. This is implemented through the concatenation of spatial features and nn.Embedding layers.
 
-# Особливості
+# Features
 
-- Архітектура побудована на згорткових нейромережах: Conv2d для дискримінатора та ConvTranspose2d для генератора.
-- Інтеграція умов (Conditional): використання nn.Embedding(10, 128) для впровадження інформації про клас як у латентний простір шуму, так і в карти ознак дискримінатора.
-- Застосовано техніку Label Smoothing (Soft Labels: 0.9 для справжніх і 0.1 для фейкових) для запобігання надмірної впевненості дискримінатора.
-- Асиметричний цикл тренування: генератор робить 3 кроки оптимізації на кожен 1 крок дискримінатора для стабілізації навчання.
-- Використання оптимізатора Adam з параметрами betas=(0.5, 0.999), що є стандартом для стабільних GAN.
-- Динамічне зменшення темпу навчання через StepLR.
-- Додаткові скрипти для візуалізації еволюції навчання (time-lapse) та перевірки генерації всіх класів.
+- The architecture is built on convolutional neural networks: Conv2d for the discriminator and ConvTranspose2d for the generator.
+- Conditional integration: using nn.Embedding(10, 128) to introduce class information both into the latent noise space and into the feature maps of the discriminator.
+- Label Smoothing technique is applied (Soft Labels: 0.9 for real and 0.1 for fake) to prevent discriminator overconfidence.
+- Asymmetric training loop: the generator takes 3 optimization steps for every 1 step of the discriminator to stabilize training.
+- Using the Adam optimizer with parameters betas=(0.5, 0.999), which is a standard for stable GANs.
+- Dynamic learning rate reduction through StepLR.
+- Additional scripts for visualizing the training evolution (time-lapse) and checking the generation of all classes.
 
-# підготовка
+# preparation
 
-Для запуску необхідні PyTorch, Torchvision та бібліотеки для візуалізації/прогресу.
+To run, you need PyTorch, Torchvision, and libraries for visualization/progress.
 ```bash
 pip install torch torchvision matplotlib tqdm
 ```
 
-## структура файлів
+## file structure
 
 ```text
 project_root/
 │
-├── checkpoints9/ (папка куди будуть зберігатись ваги генератора)
+├── checkpoints9/ (folder where the generator weights will be saved)
 ├── config.py
-├── main.py (основний цикл тренування)
-├── models.py (архітектури мереж)
-└── plot_every_number.py (скрипт для перевірки конкретного чекпоінту)
+├── main.py (main training loop)
+├── models.py (network architectures)
+└── plot_every_number.py (script for checking a specific checkpoint)
 ```
-Датасет MNIST завантажиться автоматично у папку ./data при першому запуску main.py.
+The MNIST dataset will be downloaded automatically into the ./data folder during the first run of main.py.
 
-## запуск
+## run
 
-Для запуску тренування:
+To run the training:
 ```bash
 python main.py
 ```
 
-Для перегляду еволюції навчання (потрібні збережені ваги в папці `checkpoints`):
+To view the training evolution (saved weights in the `checkpoints` folder are required):
 ```bash
 python multimodel_plot.py
 ```
 
-# архітектура нейромережі
+# neural network architecture
 
-**Генератор:**
-- Вхідний шум (вектор 100) -> Linear -> ReLU
-- Вхідна мітка (0-9) -> Embedding(10, 128)
-- Конкатенація обох векторів, зміна розмірності на просторові тензори.
-- Блок ConvTranspose2d шарів з поступовим збільшенням розміру (4x4 -> 8x8 -> 16x16 -> 28x28) і зменшенням кількості каналів (192 -> 96 -> 48 -> 24 -> 1).
-- Вихідна активація: Tanh (зображення в діапазоні [-1, 1]).
+**Generator:**
+- Input noise (vector 100) -> Linear -> ReLU
+- Input label (0-9) -> Embedding(10, 128)
+- Concatenation of both vectors, reshaping into spatial tensors.
+- A block of ConvTranspose2d layers with a gradual increase in size (4x4 -> 8x8 -> 16x16 -> 28x28) and a decrease in the number of channels (192 -> 96 -> 48 -> 24 -> 1).
+- Output activation: Tanh (images in the range [-1, 1]).
 
-**Дискримінатор:**
-- Вхідне зображення (1x28x28) -> два блоки Conv2d(kernel=3) + ReLU + MaxPool2d(kernel=2).
-- Flatten -> Linear (виділення ознак реалізму).
-- Конкатенація ознак реалізму з Embedding мітки класу.
-- Фінальний багатошаровий перцептрон (MLP) до 1 вихідного нейрону. (Функція втрат BCEWithLogitsLoss включає в себе Sigmoid).
+**Discriminator:**
+- Input image (1x28x28) -> two blocks of Conv2d(kernel=3) + ReLU + MaxPool2d(kernel=2).
+- Flatten -> Linear (extracting realism features).
+- Concatenation of realism features with the class label Embedding.
+- Final multilayer perceptron (MLP) to 1 output neuron. (The BCEWithLogitsLoss loss function includes Sigmoid).
 
-# результати
+# results
 
-Процес тренування на 25 епохах з батчем 1024. Логи тренування показують балансування між втратами генератора та дискримінатора:
+The training process on 25 epochs with a batch size of 1024. The training logs show the balancing between the generator and discriminator losses:
 
 ```text
  Epoch 1/25 G loss: 0.6686107001062167 D loss: 0.6944530969959194
@@ -142,10 +142,10 @@ python multimodel_plot.py
 ----G lr: 0.0002 D lr: 2e-05
 ```
 
-### Генерація всіх цифр (від 0 до 9) на 25й епосі:
-![Генерація всіх цифр](https://github.com/BohdanDe/cGAN/blob/main/Figure_2.png)
+### Generation of all digits (from 0 to 9) at the 25th epoch:
+![Generation of all digits](https://github.com/BohdanDe/cGAN/blob/main/Figure_2.png)
 
-### Еволюція навчання моделі
-На графіку видно, як з кожною N-ною епохою генератор вчиться перетворювати шум на осмислені риси і краще відповідати на задану умову (цифру) в даному випадку трійку:
-![Еволюція моделей](https://github.com/BohdanDe/cGAN/blob/main/Figure_1.png)
-Хоча через відносну простоту моделі, обмежений датасет та лиш 25 епох числа часто виходять розминими, все одно вирізняються форми трійки, на відміну від простого шуму в перших епохах
+### Model training evolution
+The graph shows how with every N-th epoch, the generator learns to transform noise into meaningful features and better match the given condition (digit), in this case, a three:
+![Evolution of models](https://github.com/BohdanDe/cGAN/blob/main/Figure_1.png)
+Although due to the relative simplicity of the model, the limited dataset, and only 25 epochs, the numbers often turn out blurry, the shapes of a three still stand out, unlike the simple noise in the first epochs
